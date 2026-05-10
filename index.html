@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>AuraSynth Pro | Advanced Melodic Generator</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+    <style>
+        :root {
+            --bg: #0f172a;
+            --panel: #1e293b;
+            --accent: #38bdf8;
+            --text: #f1f5f9;
+            --danger: #ef4444;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .app-container {
+            width: 90%;
+            max-width: 440px;
+            background: var(--panel);
+            padding: 25px;
+            border-radius: 24px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            border: 1px solid #334155;
+        }
+
+        h1 {
+            text-align: center;
+            font-weight: 300;
+            letter-spacing: 3px;
+            color: var(--accent);
+            margin: 0 0 20px 0;
+            text-transform: uppercase;
+            font-size: 1.5rem;
+        }
+
+        .section { margin-bottom: 15px; }
+
+        label {
+            display: block;
+            font-size: 0.65rem;
+            text-transform: uppercase;
+            color: #94a3b8;
+            margin-bottom: 6px;
+            font-weight: 800;
+            letter-spacing: 1px;
+        }
+
+        select, input {
+            width: 100%;
+            padding: 10px;
+            background: #0f172a;
+            border: 1px solid #475569;
+            color: white;
+            border-radius: 10px;
+            font-size: 0.95rem;
+            box-sizing: border-box;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .poly-box {
+            background: #111827;
+            padding: 12px;
+            border-radius: 12px;
+            border: 1px solid #334155;
+            margin-top: 8px;
+        }
+
+        .poly-box.secondary {
+            border: 1px dashed var(--accent);
+        }
+
+        button {
+            width: 100%;
+            padding: 18px;
+            border: none;
+            border-radius: 12px;
+            font-weight: bold;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-transform: uppercase;
+        }
+
+        .btn-play {
+            background: linear-gradient(135deg, #38bdf8 0%, #2563eb 100%);
+            color: white;
+            box-shadow: 0 4px 14px 0 rgba(56, 189, 248, 0.39);
+        }
+
+        .btn-stop {
+            background: var(--danger);
+            color: white;
+            margin-top: 10px;
+        }
+
+        .hidden { display: none; }
+
+        .status {
+            text-align: center;
+            margin-top: 15px;
+            font-size: 0.75rem;
+            color: var(--accent);
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <h1>AuraSynth</h1>
+
+    <div class="section">
+        <label>Atmosphere & Mood</label>
+        <select id="mood">
+            <option value="happy">Happy (Major)</option>
+            <option value="melancholic" selected>Melancholic (Minor)</option>
+            <option value="dreamy">Dreamy (Lydian)</option>
+            <option value="ethereal">Ethereal (Airy)</option>
+            <option value="meditative">Meditative (Zen)</option>
+            <option value="reflective">Reflective (Dorian)</option>
+            <option value="atmospheric">Atmospheric (Deep)</option>
+            <option value="minimalist">Minimalist (Pure)</option>
+            <option value="experimental">Experimental (Whole Tone)</option>
+            <option value="hypnotic">Hypnotic (Cycle)</option>
+            <option value="introspective">Introspective (Internal)</option>
+            <option value="heroic">Heroic (Perfect 5ths)</option>
+            <option value="funny">Funny (Quirky)</option>
+            <option value="tense">Tense (Phrygian)</option>
+            <option value="dark">Dark (Locrian)</option>
+            <option value="mysterious">Mysterious (Diminished)</option>
+            <option value="transcendental">Transcendental (Pneuma Style)</option>
+            <option value="awakening">Awakening (Echoes Style)</option>
+        </select>
+    </div>
+
+    <div class="section">
+        <label>Hardware Tone Modeling</label>
+        <select id="tone">
+            <option value="organic">Organic (Pneuma Synth)</option>
+            <option value="industrial">Industrial (Lateralus Synth)</option>
+            <option value="abyssal">Abyssal (Echoes Synth)</option>
+            <option value="ethereal_tone">Ethereal (DSOTM Synth)</option>
+        </select>
+    </div>
+
+    <div class="grid">
+        <div class="section">
+            <label>Tempo (BPM)</label>
+            <input type="number" id="bpm" value="85">
+        </div>
+        <div class="section">
+            <label>Duration</label>
+            <select id="duration">
+                <option value="60">1 Minute</option>
+                <option value="180">3 Minutes</option>
+                <option value="300">5 Minutes</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="section">
+        <label>Rhythmic Settings</label>
+        
+        <div class="poly-box">
+            <div class="grid">
+                <div>
+                    <label>Time Sig</label>
+                    <input type="text" id="sig1" value="4/4">
+                </div>
+                <div>
+                    <label>Note Base</label>
+                    <select id="res1">
+                        <option value="4n">1/4 Note</option>
+                        <option value="8n" selected>1/8 Note</option>
+                        <option value="16n">1/16 Note</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <label style="margin-top: 15px;">Mode</label>
+        <select id="isPoly" onchange="togglePolyUI()">
+            <option value="no">Standard Rhythm</option>
+            <option value="yes">Active Polymetry</option>
+        </select>
+
+        <div id="polySettings" class="poly-box secondary hidden">
+            <div class="grid">
+                <div>
+                    <label>Poly Rhythm</label>
+                    <input type="text" id="sig2" value="7/8">
+                </div>
+                <div>
+                    <label>Poly Base</label>
+                    <select id="res2">
+                        <option value="4n">1/4 Note</option>
+                        <option value="8n">1/8 Note</option>
+                        <option value="16n">1/16 Note</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <button id="playBtn" class="btn-play" onclick="startEngine()">Start Synthesis</button>
+    <button id="stopBtn" class="btn-stop hidden" onclick="stopEngine()">Stop Audio</button>
+
+    <div id="status" class="status">System Ready.</div>
+</div>
+
+<script>
+    let synth, loop1, loop2;
+    let isPlaying = false;
+
+    // Critical for Mobile Performance
+    Tone.context.lookAhead = 0.2; 
+    Tone.context.latencyHint = "playback";
+
+    function togglePolyUI() {
+        const poly = document.getElementById('isPoly').value === 'yes';
+        document.getElementById('polySettings').classList.toggle('hidden', !poly);
+    }
+
+    const ENGINE = {
+        happy: { notes: ['C4', 'D4', 'E4', 'G4', 'A4', 'C5'], density: 0.7 },
+        melancholic: { notes: ['D3', 'E3', 'F3', 'A3', 'Bb3', 'D4'], density: 0.4 },
+        dreamy: { notes: ['F3', 'G3', 'A3', 'B3', 'E4', 'G4'], density: 0.5 },
+        ethereal: { notes: ['A3', 'B3', 'C#4', 'E4', 'F#4', 'A4'], density: 0.3 },
+        meditative: { notes: ['G2', 'C3', 'D3', 'G3', 'A3', 'C4'], density: 0.2 },
+        reflective: { notes: ['D3', 'E3', 'F3', 'G3', 'A3', 'B3', 'C4'], density: 0.5 },
+        atmospheric: { notes: ['C3', 'G3', 'C4', 'G4', 'Bb4', 'F5'], density: 0.3 },
+        minimalist: { notes: ['C4', 'D4', 'G4'], density: 0.4 },
+        experimental: { notes: ['C3', 'D3', 'E3', 'F#3', 'G#3', 'Bb3'], density: 0.6 },
+        hypnotic: { notes: ['E3', 'A3', 'B3', 'E4'], density: 0.8 },
+        introspective: { notes: ['A2', 'C3', 'E3', 'G3', 'B3'], density: 0.3 },
+        heroic: { notes: ['C3', 'F3', 'G3', 'C4', 'D4', 'G4'], density: 0.7 },
+        funny: { notes: ['C4', 'Eb4', 'F#4', 'A4', 'B4'], density: 0.8 },
+        tense: { notes: ['E3', 'F3', 'G#3', 'A3', 'B3', 'C4'], density: 0.7 },
+        dark: { notes: ['C2', 'Db2', 'Eb2', 'Gb2', 'Ab2'], density: 0.6 },
+        mysterious: { notes: ['C3', 'Eb3', 'Gb3', 'A3', 'C4'], density: 0.5 },
+        transcendental: { notes: ['D2', 'D3', 'A3', 'C4', 'D4', 'E4', 'F4', 'A4'], density: 0.5 },
+        awakening: { notes: ['B3', 'C#4', 'E4', 'F#4', 'G#4', 'B4', 'C#5', 'E5'], density: 0.4 }
+    };
+
+    function createHardwareSynth(type) {
+        // Optimized effects for low-power mobile CPU
+        const reverb = new Tone.Freeverb({ roomSize: 0.7, dampening: 4000, wet: 0.3 }).toDestination();
+        
+        // Voice limit set to 4 to prevent CPU spikes
+        const synthOptions = { maxPolyphony: 4 };
+
+        switch(type) {
+            case 'organic':
+                return new Tone.PolySynth(Tone.MonoSynth, {
+                    ...synthOptions,
+                    oscillator: { type: "sawtooth" },
+                    envelope: { attack: 0.2, release: 1.5 }
+                }).connect(reverb);
+            case 'industrial':
+                return new Tone.PolySynth(Tone.Synth, {
+                    ...synthOptions,
+                    oscillator: { type: "square" },
+                    envelope: { attack: 0.01, release: 0.1 }
+                }).toDestination();
+            case 'abyssal':
+                const echo = new Tone.FeedbackDelay("8n", 0.4).toDestination();
+                return new Tone.PolySynth(Tone.AMSynth, {
+                    ...synthOptions,
+                    envelope: { attack: 0.4, release: 2 }
+                }).connect(echo).connect(reverb);
+            case 'ethereal_tone':
+                return new Tone.PolySynth(Tone.FMSynth, {
+                    ...synthOptions,
+                    envelope: { attack: 0.3, release: 1.5 }
+                }).connect(reverb);
+        }
+    }
+
+    async function startEngine() {
+        await Tone.start();
+        await Tone.context.resume();
+        if (isPlaying) return;
+
+        const bpm = Math.min(document.getElementById('bpm').value, 140); // Cap BPM for stability
+        const isPoly = document.getElementById('isPoly').value === 'yes';
+
+        const sigParts = document.getElementById('sig1').value.split('/');
+        Tone.Transport.timeSignature = [parseInt(sigParts[0]), parseInt(sigParts[1]) || 4];
+        Tone.Transport.bpm.value = bpm;
+
+        if (synth) synth.dispose();
+        synth = createHardwareSynth(document.getElementById('tone').value);
+        
+        const moodData = ENGINE[document.getElementById('mood').value];
+        const res1 = document.getElementById('res1').value;
+
+        loop1 = new Tone.Loop(time => {
+            if (Math.random() < moodData.density) {
+                const note = moodData.notes[Math.floor(Math.random() * moodData.notes.length)];
+                synth.triggerAttackRelease(note, "8n", time);
+            }
+        }, res1).start(0);
+
+        if (isPoly) {
+            const res2 = document.getElementById('res2').value;
+            loop2 = new Tone.Loop(time => {
+                // Reduced density for the second loop to save CPU
+                if (Math.random() < 0.25) { 
+                    const n = moodData.notes[Math.floor(Math.random() * moodData.notes.length)];
+                    const highNote = Tone.Frequency(n).transpose(12);
+                    synth.triggerAttackRelease(highNote, "16n", time);
+                }
+            }, res2).start(0);
+        }
+
+        // Start with a 200ms buffer delay for Android stability
+        Tone.Transport.start("+0.2");
+        isPlaying = true;
+        document.getElementById('playBtn').classList.add('hidden');
+        document.getElementById('stopBtn').classList.remove('hidden');
+        document.getElementById('status').innerText = "SYNTHESIZING...";
+
+        const duration = parseInt(document.getElementById('duration').value);
+        setTimeout(() => stopEngine(), duration * 1000);
+    }
+
+    function stopEngine() {
+        Tone.Transport.stop();
+        Tone.Transport.cancel();
+        if (synth) synth.dispose();
+        isPlaying = false;
+        document.getElementById('playBtn').classList.remove('hidden');
+        document.getElementById('stopBtn').classList.add('hidden');
+        document.getElementById('status').innerText = "AUDIO ENGINE STOPPED.";
+    }
+</script>
+</body>
+  </html>
+                                       
